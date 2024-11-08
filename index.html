@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word-by-Word Text Reader with Indian Voice</title>
+    <title>Word-by-Word Text Reader with Indian Female Voice</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,30 +28,37 @@
     </style>
 </head>
 <body>
-    <h2>Word-by-Word Text Reader with Indian Voice</h2>
+    <h2>Word-by-Word Text Reader with Indian Female Voice</h2>
     <textarea id="input-text" placeholder="Paste your paragraph here..."></textarea>
     <button onclick="startReading()">Start Reading</button>
 
     <script>
-        let indianVoice = null;
+        let indianFemaleVoice = null;
         const synth = window.speechSynthesis;
 
-        // Function to get voices and choose an Indian voice
+        // Function to get voices and choose an Indian female voice if available
         function setVoice() {
             const voices = synth.getVoices();
 
             // Log available voices for debugging
             console.log("Available voices:", voices);
 
-            // Try to find an Indian voice based on name or language
-            indianVoice = voices.find(voice => voice.lang.includes("hi-IN") || voice.name.includes("India"));
+            // Try to find an Indian female voice based on name or language
+            indianFemaleVoice = voices.find(voice => 
+                (voice.lang.includes("hi-IN") || voice.name.includes("India")) && voice.name.toLowerCase().includes("female")
+            );
 
-            // If no Indian voice is found, fallback to the first available voice
-            if (!indianVoice) {
-                indianVoice = voices[0];
+            // If no specific female Indian voice found, fallback to any Indian voice
+            if (!indianFemaleVoice) {
+                indianFemaleVoice = voices.find(voice => voice.lang.includes("hi-IN") || voice.name.includes("India"));
             }
 
-            console.log("Selected voice:", indianVoice);
+            // Fallback to any voice if no Indian voice is found
+            if (!indianFemaleVoice) {
+                indianFemaleVoice = voices[0];
+            }
+
+            console.log("Selected voice:", indianFemaleVoice);
         }
 
         // Load voices and set the selected one
@@ -71,7 +78,7 @@
                 if (index < words.length) {
                     const utterance = new SpeechSynthesisUtterance(words[index]);
                     utterance.rate = 0.6; // Slow down the voice speed
-                    utterance.voice = indianVoice; // Use the selected voice
+                    utterance.voice = indianFemaleVoice; // Use the selected voice
 
                     // Speak the word
                     synth.speak(utterance);
