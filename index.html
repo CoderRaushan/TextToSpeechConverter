@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word-by-Word Text Reader with Indian Voice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+        }
+        textarea {
+            width: 80%;
+            height: 150px;
+            font-size: 16px;
+            margin: 10px;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Word-by-Word Text Reader with Indian Voice</h2>
+    <textarea id="input-text" placeholder="Paste your paragraph here..."></textarea>
+    <button onclick="startReading()">Start Reading</button>
+
+    <script>
+        let indianVoice = null;
+        const synth = window.speechSynthesis;
+
+        // Function to get voices and choose an Indian voice
+        function setVoice() {
+            const voices = synth.getVoices();
+
+            // Log available voices for debugging
+            console.log("Available voices:", voices);
+
+            // Try to find an Indian voice based on name or language
+            indianVoice = voices.find(voice => voice.lang.includes("hi-IN") || voice.name.includes("India"));
+
+            // If no Indian voice is found, fallback to the first available voice
+            if (!indianVoice) {
+                indianVoice = voices[0];
+            }
+
+            console.log("Selected voice:", indianVoice);
+        }
+
+        // Load voices and set the selected one
+        if (synth.onvoiceschanged !== undefined) {
+            synth.onvoiceschanged = setVoice;
+        } else {
+            setVoice();
+        }
+
+        function startReading() {
+            const text = document.getElementById("input-text").value;
+            const words = text.split(" ");
+            let index = 0;
+            const speed = 1500; // Time delay between words in milliseconds
+
+            function readWord() {
+                if (index < words.length) {
+                    const utterance = new SpeechSynthesisUtterance(words[index]);
+                    utterance.rate = 0.6; // Slow down the voice speed
+                    utterance.voice = indianVoice; // Use the selected voice
+
+                    // Speak the word
+                    synth.speak(utterance);
+
+                    // Move to the next word after the specified delay
+                    index++;
+                    setTimeout(readWord, speed);
+                }
+            }
+
+            // Start reading words after a brief delay
+            setTimeout(readWord, 500);
+        }
+    </script>
+</body>
+</html>
