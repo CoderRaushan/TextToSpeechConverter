@@ -3,65 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word-by-Word Text Reader with Indian Female Voice</title>
+    <title>Word-by-Word Text Reader with Speed Control</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #fff;
+            padding: 20px;
             flex-direction: column;
             text-align: center;
         }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
         textarea {
-            width: 80%;
+            width: 90%;
+            max-width: 600px;
             height: 150px;
             font-size: 16px;
-            margin: 10px;
-            padding: 10px;
+            margin: 10px 0;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            resize: none;
+        }
+        .buttons, .speed-control {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
         button {
-            padding: 10px 20px;
+            padding: 12px 30px;
             font-size: 16px;
+            background-color: #fff;
+            color: #2575fc;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #2575fc;
+            color: #fff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        input[type="range"] {
+            width: 100px;
+        }
+        .speed-display {
+            font-size: 1.2rem;
+            color: #fff;
         }
     </style>
 </head>
 <body>
-    <h2>Word-by-Word Text Reader with Indian Female Voice</h2>
+    <h2>Word-by-Word Text Reader with Speed Control</h2>
     <textarea id="input-text" placeholder="Paste your paragraph here..."></textarea>
-    <button onclick="startReading()">Start Reading</button>
+    
+    <div class="speed-control">
+        <label for="speed">Speed:</label>
+        <input type="range" id="speed" min="0.1" max="3" value="0.6" step="0.1" oninput="updateSpeedDisplay()">
+        <span id="speed-display" class="speed-display">0.6</span>
+    </div>
+    
+    <div class="buttons">
+        <button onclick="startReading()">Start</button>
+        <button onclick="stopReading()">Stop</button>
+        <button onclick="resumeReading()">Resume</button>
+    </div>
 
     <script>
         let indianFemaleVoice = null;
         const synth = window.speechSynthesis;
+        let words = [];
+        let index = 0;
+        let isPaused = false;
+        let speechRate = 0.6;  // Default speed
 
-        // Function to get voices and choose an Indian female voice if available
         function setVoice() {
             const voices = synth.getVoices();
-
-            // Log available voices for debugging
-            console.log("Available voices:", voices);
-
-            // Try to find an Indian female voice based on name or language
             indianFemaleVoice = voices.find(voice => 
                 (voice.lang.includes("hi-IN") || voice.name.includes("India")) && voice.name.toLowerCase().includes("female")
             );
-
-            // If no specific female Indian voice found, fallback to any Indian voice
             if (!indianFemaleVoice) {
                 indianFemaleVoice = voices.find(voice => voice.lang.includes("hi-IN") || voice.name.includes("India"));
             }
-
-            // Fallback to any voice if no Indian voice is found
             if (!indianFemaleVoice) {
                 indianFemaleVoice = voices[0];
             }
-
             console.log("Selected voice:", indianFemaleVoice);
         }
 
-        // Load voices and set the selected one
         if (synth.onvoiceschanged !== undefined) {
             synth.onvoiceschanged = setVoice;
         } else {
@@ -70,27 +113,45 @@
 
         function startReading() {
             const text = document.getElementById("input-text").value;
-            const words = text.split(" ");
-            let index = 0;
-            const speed = 1500; // Time delay between words in milliseconds
+            words = text.split(" ");
+            index = 0;
+            isPaused = false;
+            readWord();
+        }
 
-            function readWord() {
-                if (index < words.length) {
-                    const utterance = new SpeechSynthesisUtterance(words[index]);
-                    utterance.rate = 0.6; // Slow down the voice speed
-                    utterance.voice = indianFemaleVoice; // Use the selected voice
+        function stopReading() {
+            isPaused = true;
+            synth.cancel();
+        }
 
-                    // Speak the word
-                    synth.speak(utterance);
-
-                    // Move to the next word after the specified delay
-                    index++;
-                    setTimeout(readWord, speed);
-                }
+        function resumeReading() {
+            if (isPaused) {
+                isPaused = false;
+                readWord();
             }
+        }
 
-            // Start reading words after a brief delay
-            setTimeout(readWord, 500);
+        function readWord() {
+            if (index < words.length && !isPaused) {
+                const utterance = new SpeechSynthesisUtterance(words[index]);
+                utterance.rate = speechRate;
+                utterance.voice = indianFemaleVoice;
+                utterance.onend = function () {
+                    index++;
+                    if (!isPaused) {
+                        setTimeout(readWord, 1500 / speechRate); // Adjust delay based on speed
+                    }
+                };
+                synth.speak(utterance);
+            }
+        }
+
+        // Update the display and speech rate when slider changes
+        function updateSpeedDisplay() {
+            const speedElement = document.getElementById("speed");
+            const speedDisplay = document.getElementById("speed-display");
+            speechRate = parseFloat(speedElement.value);
+            speedDisplay.textContent = speechRate.toFixed(1);
         }
     </script>
 </body>
